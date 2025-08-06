@@ -8,12 +8,9 @@ on:
 jobs:
   assemble:
     runs-on: ubuntu-latest
-    # Use runner.temp (a valid context) instead of runner.tool_cache
-    env:
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
 
     steps:
-      # 1) Checkout your code
+      # 1) Check out your code
       - uses: actions/checkout@v4
 
       # 2) Make the Gradle wrapper executable
@@ -27,23 +24,29 @@ jobs:
           distribution: temurin
           java-version: '11'
 
-      # 4) Install Android command-line tools & SDK packages
+      # 4) Install Android SDK Command-Line Tools
       - name: Install Android SDK
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip
+          # install under $HOME/android-sdk
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          # accept licenses and install platforms & build-tools
           yes | $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
             "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
       # 5) Build the debug APK
       - name: Build Debug APK
-        run: ./gradlew clean assembleDebug --no-daemon
+        run: |
+          # point Gradle at our SDK
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          ./gradlew clean assembleDebug --no-daemon
 
-      # 6) Upload the resulting APK 
+      # 6) Upload the APK
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
