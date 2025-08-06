@@ -43,7 +43,7 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew clean assembleDebug --no-daemon
 
-      # 6) Upload the resulting APK
+      # 6) Upload the resulting APK 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
